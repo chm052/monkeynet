@@ -103,7 +103,6 @@ public class ANN {
 		layers[i] = layer;
 	}
 
-
 	// probably a bad idea to handle file writing, instead output a double array, where each double
 	// is the population error after training another pattern
 	// file writing can be handled by a second sims class, much easier
@@ -146,7 +145,6 @@ public class ANN {
 		return outputs;
 	}
 	
-
 	public double[] fullRehearsalSerialLearning(double[][] baseinputs, double[][] baseoutputs, 
 			double[][] serialinputs, double[][] serialoutputs, double maxerror) {
 
@@ -290,7 +288,6 @@ public class ANN {
 		return outputs;
 	}
 
-	
 	public static void randomTrainPopulation(double[][] inputs, double[][] trainin, double[][] testin,
 			double[][] outputs, double[][] trainout, double[][] testout) {
 
