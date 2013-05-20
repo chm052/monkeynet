@@ -157,7 +157,7 @@ public class SimsThesis {
 			
 			//ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout);
 			//ann.reset();
-			
+			// oh hai gittttt
 			double[] trial = ann.noRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
