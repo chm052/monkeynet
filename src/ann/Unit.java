@@ -5,13 +5,18 @@ import java.util.Random;
 
 public abstract class Unit {
 	static DecimalFormat fmt = new DecimalFormat("0.00");
-
+	static Random r = new Random();
+	
 	double[] weights;
 	public double output;
 	public double error;
 	double[] previousUpdates;
 
 	public Unit() {}
+	
+	public static double randomWeight() {
+		return (r.nextDouble()*0.6) - 0.3;
+	}
 	
 	public void init(double[] weights) {
 		this.weights = weights;
@@ -20,9 +25,8 @@ public abstract class Unit {
 
 	public static double[] randomWeights(int numWeights) {
 		double[] weights = new double[numWeights];
-		Random r = new Random();
 		for (int i = 0; i < weights.length; i++) {
-			weights[i] = r.nextDouble();
+			weights[i] = randomWeight();
 		}
 		return weights;
 	}
