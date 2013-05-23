@@ -3,6 +3,7 @@ package ann;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 public class SimsThesis {
@@ -24,9 +25,11 @@ public class SimsThesis {
 
 		double[][] randin = new double[20][4];
 		double[][] randout = new double[20][3];
-		int[] hlsizes = {1, 5, 10, 25, 50, 100};
+		int[] hlsizes = {1, 10, 25, 50, 100};
 		
-		findBestHL("thesis/spiralHL.txt", 5, 80000, 2000, spiralann, hlsizes, inputsSpiral, outputsSpiral);
+		
+		findBestOverfittingByHL("thesis/spiraloverfitHL.txt", 5, 100000, 2000, spiralann, hlsizes, inputsSpiral, outputsSpiral);
+		//findBestHL("thesis/spiralHL.txt", 20, 70000, 2000, spiralann, hlsizes, inputsSpiral, outputsSpiral);
 		//trackError("thesis/spiraltrack.txt", 20, 100000, 2000, spiralann, inputsSpiral, outputsSpiral);
 		//noRehearsalSerialLearning("thesis/norehearsal.txt", irisann, randin, randout, basePopSize, serialPopSize, maxError);
 		//fullRehearsalSerialLearning("thesis/fullrehearsal.txt", irisann, inputsIris, outputsIris, basePopSize, serialPopSize, maxError);
@@ -36,12 +39,66 @@ public class SimsThesis {
 		//	basePopSize, serialPopSize, maxError, bufferSize);
 	}
 	
+	public static void findBestOverfittingByHL(String filename, int reps, int epochsPerRep, int printFrequency,
+			ANN ann, int[] hlsizes, double[][] inputs, double[][] outputs) throws IOException {
+		int numDataPoints = epochsPerRep/printFrequency;
+		File file = new File(filename);
+		FileWriter f = new FileWriter(file.getAbsolutePath());
+
+		double[][] trainin = new double[inputs.length/3][inputs[0].length];
+		double[][] trainout = new double[outputs.length/3][outputs[0].length];
+		double[][] testin = new double[inputs.length-trainin.length][inputs[0].length];
+		double[][] testout = new double[outputs.length-trainout.length][outputs[0].length];
+
+		ANN.randomTrainPopulation(inputs, trainin, testin, outputs, trainout, testout);
+
+		System.err.println(Arrays.deepToString(trainin) + "\n"
+				+ Arrays.deepToString(trainout));
+
+		f.write("0\t");
+		for (int i = 0; i < epochsPerRep; i++) {
+			if (i%printFrequency == 0) f.write(i + "\t");
+		}
+		f.write("\n");
+		for (int hlsize = 0; hlsize < hlsizes.length; hlsize++) {
+			ann = new ANN(1, ann.learningSpeed, ann.momentum, ann.layerSize(0), hlsizes[hlsize], ann.layerSize(2));
+			System.err.println(ann.layerSize(1));
+			double[][] tracks = new double[numDataPoints][reps];
+			for (int q = 0; q < reps; q++) {
+				ann.reset();
+				
+				ANN.randomTrainPopulation(inputs, trainin, testin, outputs, trainout, testout);
+
+				int dataPoint = 0;
+				for (int i = 0; i < epochsPerRep; i++) {
+					ANN.permute(trainin, trainout);
+					for (int j = 0; j < trainin.length; j++) {
+						Pattern trial = new Pattern(trainin[j], trainout[j]);
+						ann.pass(trial);
+						ann.updateAllWeights(trial);
+					}
+					double err = ANN.populationError(ann.outputs(testin), testout);
+					if (i%printFrequency == 0) {
+						tracks[dataPoint][q] = err;
+						dataPoint++;
+					}
+				}
+			}
+			f.write(hlsizes[hlsize] + "\t");
+			for (int dp = 0; dp < tracks.length; dp++) {
+				f.write(SimsA01.median(tracks[dp]) + "\t");
+				//System.err.println(median(tracks[dp]));
+			}
+			f.write("\n");
+		}
+		f.close();
+	}
+	
 	public static void findBestHL(String filename, int reps, int epochsPerRep, int printFrequency,
 			ANN ann, int[] hlsizes, double[][] inputs, double[][] outputs) throws IOException {
 		int numDataPoints = epochsPerRep/printFrequency;
 		File file = new File(filename);
 		FileWriter f = new FileWriter(file.getAbsolutePath());
-		
 		/*
 		double[][] trainin = new double[inputs.length/3][inputs[0].length];
 		double[][] trainout = new double[outputs.length/3][outputs[0].length];
@@ -123,42 +180,7 @@ public class SimsThesis {
 		}
 		f.close();
 	}
-	
-	/*public static void hiddenLayerSizesVsError(String filename, int epochs, int reps,  ANN ann, double[][] inputs, double[][] outputs) {
-		File file = new File(filename);
-		FileWriter f = new FileWriter(file.getAbsolutePath());
 		
-		f.write("0\t");
-		for (int ndp = 0; ndp < numDataPoints; ndp++) {
-			for (int pp = 0; pp < pointsPrinted; pp++) {
-				f.write(ndp + "\t");
-			}
-		}
-		f.write("\n");
-		for (int hlsize = 0; hlsize < hlsizes.length; hlsize++) {
-			f.write(hlsizes[hlsize] + "\t");
-			ann = new ANN(1, ann.learningSpeed, ann.momentum, ann.layerSize(0), hlsizes[hlsize], ann.layerSize(2));
-			System.err.println(ann.layerSize(1));
-			for (int i = 0; i < epochs; i++) {
-				ANN.permute(trainin, trainout);
-				for (int j = 0; j < trainin.length; j++) {
-					Pattern trial = new Pattern(trainin[j], trainout[j]);
-					ann.pass(trial);
-					ann.updateAllWeights(trial);
-				}
-				double[][] outs = ann.outputs(testin);
-				if (i%printFrequency == 0) {
-					for (int kk = 0; kk < pointsPrinted; kk++) {
-						f.write(outs[r.nextInt(outs.length)][0] + "\t");
-					}
-				}
-			}
-			f.write("\n");
-			
-		}
-		f.close();
-	}*/
-	
 	public static void sweepPseudoRehearsalSerialLearning(String filename, ANN ann,  double[][] inputs, double[][] outputs,
 			int basePopSize, int serialPopSize, double maxError, int bufferSize) throws IOException {
 		SimsA01.createRandomDataSet("src/ann/custominputs.txt", "src/ann/customoutputs.txt", 500);
