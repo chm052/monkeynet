@@ -3,6 +3,7 @@ package ann;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 import java.util.Scanner;
@@ -103,9 +104,6 @@ public class ANN {
 		layers[i] = layer;
 	}
 
-	// probably a bad idea to handle file writing, instead output a double array, where each double
-	// is the population error after training another pattern
-	// file writing can be handled by a second sims class, much easier
 	// length of the output will be equal to length of the @param serialinputs/serialoutputs arrays (+1 for initial error)
 	// (their first-level arrays i.e. rows, not their nested arrays)
 	public double[] noRehearsalSerialLearning(double[][] baseinputs, double[][] baseoutputs, 
@@ -114,9 +112,9 @@ public class ANN {
 		double[] outputs = new double[serialinputs.length + 1];	
 
 		double error = maxerror + 1;
-
+		int counter = 0;	
 		// train base population
-		while (maxerror < error) {
+		while (maxerror < error && counter++ < 1000) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -125,22 +123,25 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
+		if (counter>=1000) { System.err.println("counter exceeded 1000");}
 
 		for (int i = 0; i < serialinputs.length; i++) {
 			Pattern trial = new Pattern(serialinputs[i], serialoutputs[i]);
 
 			error = maxerror + 1;
-			while (maxerror < error) {
+			counter = 0;
+			while (maxerror < error && counter++ < 1000) {
 				pass(trial);
 				updateAllWeights(trial);
 				error = patternError(getCurrentOutput(), serialoutputs[i]);
-				System.err.println(error);
+				//System.err.println(error);
 			}
-			System.err.println();
+			//System.err.println();
 
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
 		}
+		if (counter>=1000) { System.err.println("counter exceeded 1000"); }
 		
 		return outputs;
 	}
@@ -151,9 +152,9 @@ public class ANN {
 		double[] outputs = new double[serialinputs.length + 1];	
 
 		double error = maxerror + 1;
-
+		int counter = 0;
 		// train base population
-		while (maxerror < error) {
+		while (maxerror < error && counter++ < 1000) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -162,6 +163,8 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
+		if (counter>=1000) { System.err.println("counter exceeded 1000"); }
+
 
 		for (int i = 0; i < serialinputs.length; i++) {
 			
@@ -177,8 +180,8 @@ public class ANN {
 			}
 
 			error = maxerror + 1;
-			
-			while (maxerror < error) {
+			counter = 0;
+			while (maxerror < error && counter++ < 1000) {
 				for (int j = 0; j < rehearseinputs.length; j++) {
 					Pattern trial = new Pattern(rehearseinputs[j], rehearseoutputs[j]);
 					pass(trial);
@@ -186,6 +189,7 @@ public class ANN {
 				}
 				error = populationError(outputs(rehearseinputs), rehearseoutputs);
 			}
+			if (counter>=1000) { System.err.println("counter exceeded 1000"); }
 
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
@@ -200,9 +204,9 @@ public class ANN {
 		double[] outputs = new double[serialinputs.length + 1];	
 
 		double error = maxerror + 1;
-
+		int counter = 0;
 		// train base population
-		while (maxerror < error) {
+		while (maxerror < error && counter++ < 1000) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -225,8 +229,8 @@ public class ANN {
 			rehearseoutputs[rehearseoutputs.length-1] = serialoutputs[i];
 
 			error = maxerror + 1;
-			
-			while (maxerror < error) {
+			counter = 0;
+			while (maxerror < error && counter++ < 1000) {
 				for (int j = 0; j < rehearseinputs.length; j++) {
 					Pattern trial = new Pattern(rehearseinputs[j], rehearseoutputs[j]);
 					pass(trial);
@@ -242,15 +246,29 @@ public class ANN {
 		return outputs;
 	}
 	
+	public void makepseudopop(double[][] inputs, double[][] outputs) {
+		Random r = new Random();
+		
+		for (int i = 0; i < inputs.length; i++) {
+			for (int j = 0; j < inputs[i].length; j++) {
+				inputs[i][j] = r.nextDouble() < 0.5 ? 0 : 1;
+			}
+			
+			pass(new Pattern(inputs[i], null));
+			outputs[i] = getCurrentOutput();
+		}
+		
+	}
+	
 	public double[] sweepPseudoRehearsalSerialLearning(double[][] baseinputs, double[][] baseoutputs, 
 			double[][] serialinputs, double[][] serialoutputs, double maxerror, int bufferSize) {
-		Random r = new Random();
 		double[] outputs = new double[serialinputs.length + 1];	
-
+		System.out.println("Entering sweep pseudorehearsal");
 		double error = maxerror + 1;
-
+		
 		// train base population
-		while (maxerror < error) {
+		int cutoff = 0;
+		while (maxerror < error && cutoff++ < 1000) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -259,19 +277,26 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
+		System.out.println("Trained on base pop");
+		
+		double[][] pseudoinputs = new double[8][baseinputs[0].length];
+		double[][] pseudooutputs = new double[8][baseoutputs[0].length];
+		
+		makepseudopop(pseudoinputs, pseudooutputs);
+		System.out.println("\tONE: made pseudopop:\n" + Arrays.deepToString(pseudoinputs) + "\n" + Arrays.deepToString(pseudooutputs));
 
 		for (int i = 0; i < serialinputs.length; i++) {
-			
-			double[][] rehearseinputs = new double[bufferSize + 1][];
-			double[][] rehearseoutputs = new double[bufferSize + 1][];
+			System.out.println("\tTWO: training serial input " + i);
+			double[][] rehearseinputs = new double[bufferSize + 1][serialinputs[i].length];
+			double[][] rehearseoutputs = new double[bufferSize + 1][serialoutputs[i].length];
 			rehearseinputs[rehearseinputs.length-1] = serialinputs[i];
 			rehearseoutputs[rehearseoutputs.length-1] = serialoutputs[i];
 
 			error = maxerror + 1;
-			
-			while (maxerror < error) {
+			cutoff = 0;
+			while (maxerror < error && cutoff++ < 1000) {
 				
-				pseudopop(rehearseinputs, rehearseoutputs, rehearseinputs.length-1);
+				selectpop(rehearseinputs, rehearseoutputs, rehearseinputs.length-1, pseudoinputs, pseudooutputs);
 				
 				for (int j = 0; j < rehearseinputs.length; j++) {
 					Pattern trial = new Pattern(rehearseinputs[j], rehearseoutputs[j]);
@@ -279,8 +304,9 @@ public class ANN {
 					updateAllWeights(trial);
 				}
 				error = populationError(outputs(rehearseinputs), rehearseoutputs);
+				//System.out.println("THREE: error " + error);
 			}
-
+			System.out.println("\tTHREE: trained "  + i);
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
 		}
@@ -306,17 +332,15 @@ public class ANN {
 		}
 	}
 
-	public void pseudopop(double[][] inputs, double[][] outputs, int size) {
-		Random r = new Random();
+	public void selectpop(double[][] inputs, double[][] outputs, int size, double[][] inputpool, double[][] outputpool) {
+		//System.out.println("selecting pop!");
+		permute(inputpool, outputpool);
 		
 		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < inputs[i].length; j++) {
-				inputs[i][j] = r.nextDouble();
-			}
-			
-			pass(new Pattern(inputs[i], null));
-			outputs[i] = getCurrentOutput();
+			inputs[i] = inputpool[i];
+			outputs[i] = outputpool[i];
 		}
+		//System.out.println(Arrays.deepToString(inputs) + "\n" + Arrays.deepToString(outputs));
 	}
 	 
 	 public static double[][] readPattern(String filename, String separator) throws FileNotFoundException {
