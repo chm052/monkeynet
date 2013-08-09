@@ -67,6 +67,25 @@ public abstract class Unit {
 		return weights.length;
 	}
 
+	public void addRandomWeight() {
+		double[] tempW = new double[numWeights()+1];
+		double[] tempPrev = new double[numWeights()+1];
+
+		for (int i = 0; i < numWeights() - 1; i++) {
+			tempW[i] = weight(i);
+			tempPrev[i] = previousUpdates[i];
+		}
+		
+		tempW[numWeights() - 1] = r.nextDouble();
+		tempW[numWeights()] = weights[numWeights()-1];
+		
+		tempPrev[numWeights() - 1] = 0;
+		tempPrev[numWeights()] = previousUpdates[numWeights() - 1];
+		
+		weights = tempW;
+		previousUpdates = tempPrev;
+	}
+	
 	@Override
 	public abstract Unit clone();
 	

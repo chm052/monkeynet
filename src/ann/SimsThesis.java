@@ -38,7 +38,49 @@ public class SimsThesis {
 		//		basePopSize, serialPopSize, maxError, bufferSize);
 		//sweepPseudoRehearsalSerialLearning("thesis/dSPRiris.txt", randann, 32, 32,
 			//basePopSize, serialPopSize, maxError, bufferSize);
-		noThenFullThenRandomThenSweepPs("thesis/nothenfullthenrandomthensweepps.txt", randann, basePopSize, serialPopSize, maxError);
+		//noThenFullThenRandomThenSweepPs("thesis/nothenfullthenrandomthensweepps.txt", randann, basePopSize, serialPopSize, maxError);
+		noThenFullThenSweepThenSweepPs("thesis/nothenfullthensweepthensweepps2.txt", randann, basePopSize, serialPopSize, maxError, true);
+
+		
+		double[][] inputs = {{0,0}, {0,1}, {1,0}, {1,1}};
+		double[][] outputs = {{0}, {1}, {1}, {0}};
+		ANN dynann = new ANN(1, 0.5, 0.5, 2, 1, 1);
+		double dynamicError = 0.01;
+		double abortlim = 10000;
+		boolean reset = true;
+		boolean reals = false;
+		
+		double[][] basein = {{0,0}, {0,1}};
+		double[][] baseout = {{0}, {1}};
+		double[][] serialin = {{1,0}, {1,1}};
+		double[][] serialout = {{1}, {0}};
+		//dynamicTrain("thesis/dynamictrack.txt", dynann, inputs, outputs, dynamicError, false);
+		// TRY CHANGING BUFFER SIZE
+		//sweepPseudoRehearsalSerialLearningDynVsNot("thesis/dynVsNot.txt", dynann, 
+			//	basein, baseout, serialin, serialout, dynamicError, bufferSize, abortlim, reset, reals);
+		
+		//sweepPseudoRehearsalSerialLearningDynVsNot("thesis/dynVsNotReals.txt", dynann, 
+			//		basein, baseout, serialin, serialout, dynamicError, bufferSize, abortlim, true, true);
+		
+		/*ANN dynIrisAnn = new ANN(1, 0.5, 0.5, 4, 1, 3);
+		double irisError = 0.1;
+		
+		double[][] inputsIrisSmall = ANN.readPattern("src/ann/smallirisin.txt", "\\s\\s");
+		double[][] outputsIrisSmall = ANN.readPattern("src/ann/smallirisout.txt", "\\s\\s");
+		
+		double[][] baseinputsIris = Arrays.copyOf(inputsIrisSmall, 20);
+		double[][] baseoutputsIris = Arrays.copyOf(outputsIrisSmall, 20);
+		double[][] serialinputsIris = Arrays.copyOfRange(inputsIrisSmall, 21, 30);
+		double[][] serialoutputsIris = Arrays.copyOfRange(outputsIrisSmall, 21, 30);
+		
+		System.out.println(Arrays.deepToString(baseinputsIris));
+		System.out.println(Arrays.deepToString(baseoutputsIris));
+		System.out.println(Arrays.deepToString(serialinputsIris));
+		System.out.println(Arrays.deepToString(serialoutputsIris));
+		
+		sweepPseudoRehearsalSerialLearningDynVsNot("thesis/dynVsNot.txt", dynIrisAnn, 
+				baseinputsIris, baseoutputsIris, serialinputsIris, serialoutputsIris, irisError, bufferSize, abortlim, reset, reals);*/
+		
 	}
 
 	public static void findBestOverfittingByHL(String filename, int reps, int epochsPerRep, int printFrequency,
@@ -200,7 +242,7 @@ public class SimsThesis {
 	}
 	
 	public static void sweepPseudoRehearsalSerialLearning(String filename, ANN ann, int inputLength, int outputLength,
-			int basePopSize, int serialPopSize, double maxError, int bufferSize) throws IOException {
+			int basePopSize, int serialPopSize, double maxError, int bufferSize, boolean reals) throws IOException {
 		double[][] inputs = new double[basePopSize+serialPopSize][inputLength];
 		double[][] outputs = new double[basePopSize+serialPopSize][outputLength];
 		createRandomDataSet(inputs, outputs);
@@ -228,7 +270,7 @@ public class SimsThesis {
 
 			ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout); // %%%%REALS
 			
-			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize);
+			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize, reals);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
 			}
@@ -240,6 +282,82 @@ public class SimsThesis {
 			f.write(i + "\t" + SimsA01.median(allout[i]) + "\n");
 		}
 
+		f.close();
+		System.out.println("done");
+
+	}
+	
+	public static void sweepPseudoRehearsalSerialLearningDynVsNot(String filename, ANN ann, 
+			double[][] basein, double[][] baseout,
+			double[][] serialin, double[][] serialout, 
+			double maxError, int bufferSize, double abortlim,
+			boolean reset, boolean reals) throws IOException {
+
+		File file = new File(filename);
+		FileWriter f = new FileWriter(file.getAbsolutePath());
+		
+		/*f.write("0\t");
+		for (int i = 0; i < serialout.length + 1; i++) {
+			f.write(i + "\t");
+		}
+		f.write("\n");*/
+		
+		int reps = 1; // number of tests
+		double[][] allout = new double[serialin.length+1][reps]; // holds all test data
+		
+		for (int rep = 0; rep < reps; rep++) {
+			//System.out.println("one: trial " + rep);
+			ann.reset();
+			
+			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize, reals);
+			for (int j = 0; j < allout.length; j++) {
+				allout[j][rep] = trial[j];
+			}
+			//System.out.println("two: finished trial " + rep);
+		}
+		//System.out.println("three: writing to file");
+
+		/*f.write("normal\t");
+		for (int i = 0; i < allout.length; i++) {
+			f.write(SimsA01.median(allout[i]) + "\t");
+		}
+		f.write("\n");*/
+		
+		
+		//// dynamic! MUST GO AFTER BECAUSE RESET DOESN'T RESENT # OF HL NODES!!!!!!!
+		System.out.println("\n\nDYNAMICCCCC");
+		double[][][] dynamOut = new double[2][serialin.length+1][reps]; 
+
+		for (int rep = 0; rep < reps; rep++) {
+			//System.out.println("one: trial " + rep);
+			ann.reset();
+			
+			double[][] trial = ann.dynamicSweepPseudo(basein, baseout, serialin, serialout, maxError, bufferSize, abortlim, reset, reals);
+			
+			System.out.println("trials:");
+			System.out.println(Arrays.deepToString(trial) + "\n");
+			for (int j = 0; j < dynamOut.length; j++) {
+				dynamOut[0][j][rep] = trial[0][j];
+			}
+			for (int j = 0; j < dynamOut.length; j++) {
+				dynamOut[1][j][rep] = trial[1][j];
+			}
+			//System.out.println("two: finished trial " + rep);
+		}
+		//System.out.println("three: writing to file");
+
+		f.write("dynamic base\t");
+		for (int i = 0; i < dynamOut[0].length; i++) {
+			f.write(SimsA01.median(dynamOut[0][i]) + "\t");
+		}
+		f.write("\n");
+
+		f.write("dynamic serial\t");
+		for (int i = 0; i < dynamOut[0].length; i++) {
+			f.write(SimsA01.median(dynamOut[1][i]) + "\t");
+		}
+		f.write("\n");
+		
 		f.close();
 		System.out.println("done");
 
@@ -277,8 +395,8 @@ public class SimsThesis {
 
 	}
 
-	public static void noThenFullThenRandomThenSweepPs(String filename, ANN ann, 
-			int basePopSize, int serialPopSize, double maxError) throws IOException {
+	public static void noThenFullThenSweepThenSweepPs(String filename, ANN ann, 
+			int basePopSize, int serialPopSize, double maxError, boolean reals) throws IOException {
 		
 		int inputSize = ann.layerSize(0);
 		int outputSize = ann.layerSize(ann.numLayers()-1);
@@ -294,6 +412,7 @@ public class SimsThesis {
 		File file = new File(filename);
 		FileWriter f = new FileWriter(file.getAbsolutePath());
 		
+		f.write("0\t");
 		for (int i = 0; i < serialout.length + 1; i++) {
 			f.write(i + "\t");
 		}
@@ -301,10 +420,9 @@ public class SimsThesis {
 
 		int reps = 50;
 		
-		
 		double[][] allout = new double[serialin.length+1][reps];
 		
-		// no rehearsal /////////////////////
+		/*// no rehearsal /////////////////////
 		System.out.println("no rehearsal...");
 		
 		for (int rep = 0; rep < reps; rep++) {
@@ -319,12 +437,12 @@ public class SimsThesis {
 			}
 		}
 
+		f.write("no rehearsal\t");
 		for (int i = 0; i < allout.length; i++) {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
 		
-
 		// full rehearsal /////////////////
 		System.out.println("full rehearsal...");
 		
@@ -341,13 +459,13 @@ public class SimsThesis {
 			}
 		}
 
+		f.write("full rehearsal\t");
 		for (int i = 0; i < allout.length; i++) {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
 		
-		
-		// random //////////////////////
+		// sweep //////////////////////
 		System.out.println("aaaaaaand random....");
 		allout = new double[serialin.length+1][reps];
 
@@ -357,18 +475,19 @@ public class SimsThesis {
 			ann.reset();
 			ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout);
 
-			double[] trial = ann.randomRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, 3);
+			double[] trial = ann.sweepRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
 			}
 		}
 
+		f.write("random rehearsal\t");
 		for (int i = 0; i < allout.length; i++) {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
 		
-		// sweep pseudo
+		*/// sweep pseudo
 		System.out.println("aaaaaaaaaaaaaaand sweep pseudorehearsal...!");
 		
 		allout = new double[serialin.length+1][reps]; 
@@ -385,12 +504,13 @@ public class SimsThesis {
 
 			ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout); // %%%%REALS
 			
-			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, 3);
+			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, 10, reals);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
 			}
 		}
 
+		f.write("sweep pseudorehearsal\t");
 		for (int i = 0; i < allout.length; i++) {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
@@ -431,6 +551,37 @@ public class SimsThesis {
 
 	}
 
+	public static void sweepRehearsalSerialLearning(String filename, ANN ann,  double[][] inputs, double[][] outputs,
+			int basePopSize, int serialPopSize, double maxError) throws IOException {
+
+		double[][] basein = new double[basePopSize][inputs[0].length];
+		double[][] baseout = new double[basePopSize][outputs[0].length];
+		double[][] serialin = new double[serialPopSize][inputs[0].length];
+		double[][] serialout = new double[serialPopSize][outputs[0].length];
+
+		File file = new File(filename);
+		FileWriter f = new FileWriter(file.getAbsolutePath());
+
+		int reps = 50;
+		double[][] allout = new double[serialin.length+1][reps];
+
+		for (int rep = 0; rep < reps; rep++) {
+			ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout);
+
+			double[] trial = ann.sweepRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError);
+			for (int j = 0; j < allout.length; j++) {
+				allout[j][rep] = trial[j];
+			}
+		}
+
+		for (int i = 0; i < allout.length; i++) {
+			f.write(i + "\t" + SimsA01.median(allout[i]) + "\n");
+		}
+
+		f.close();
+
+	}
+	
 	public static void noRehearsalSerialLearning(String filename, ANN ann,  double[][] inputs, double[][] outputs,
 			int basePopSize, int serialPopSize, double maxError) throws IOException {
 
@@ -481,4 +632,27 @@ public class SimsThesis {
 		}
 	}
 
+	public static void dynamicTrain(String filename, ANN ann, double[][] inputs, double[][] outputs, double maxerror, boolean reset) throws IOException {
+		double[] errs = ann.dynamicTrain(inputs, outputs, maxerror, reset);
+		
+		File file = new File(filename);
+		FileWriter f = new FileWriter(file.getAbsolutePath());
+		
+		for (int i = 0; i < errs.length; i++) {
+			f.write((i*100) + "\t");
+		}
+		f.write("\n");
+		for (int i = 0; i < errs.length; i++) {
+			f.write(errs[i] + "\t");
+		}
+		f.write("\n");
+		
+		f.close();
+		
+	}
+	
+	public static void dynamicSweepPseudo(ANN ann, double[][] baseinputs, double[][] baseoutputs, 
+			double[][] serialinputs, double[][] serialoutputs, double maxerror) {
+		
+	}
 }

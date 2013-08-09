@@ -1,5 +1,6 @@
 package ann;
 
+
 public class HiddenUnit extends Unit {
 
 	public HiddenUnit(int numWeights) {
@@ -10,7 +11,8 @@ public class HiddenUnit extends Unit {
 	public double activationFunction(double rawinput) {
 		return 1.0/(1 + Math.exp((-1) * rawinput));
 	}
-
+	
+	
 	@Override
 	public Unit clone() {
 		return new HiddenUnit(numWeights());
