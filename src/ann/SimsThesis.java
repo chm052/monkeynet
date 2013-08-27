@@ -18,7 +18,7 @@ public class SimsThesis {
 		ANN irisann = new ANN(1, 0.5, 0.5, 4, 3, 3);
 		ANN spiralann = new ANN(1, 0.5, 0.5, 2, 15, 1);
 		ANN randann = new ANN(1, 0.3, 0.5, 32, 16, 32); //robins
-		
+
 		int basePopSize = 20; // 20 Robins
 		int serialPopSize = 10; // 10 Robins
 		double maxError = 0.3;
@@ -28,7 +28,7 @@ public class SimsThesis {
 		double[][] randin = new double[20][4];
 		double[][] randout = new double[20][3];
 		int[] hlsizes = {1, 2, 5, 10, 25, 100};
-		
+
 		//findBestOverfittingByHL("thesis/spiraloverfitHL.txt", 1, 200000, 2000, spiralann, hlsizes, inputsSpiral, outputsSpiral);
 		//findBestHL("thesis/spiralHL.txt", 20, 70000, 2000, spiralann, hlsizes, inputsSpiral, outputsSpiral);
 		//trackError("thesis/spiraltrack.txt", 20, 100000, 2000, spiralann, inputsSpiral, outputsSpiral);
@@ -37,11 +37,11 @@ public class SimsThesis {
 		//randomRehearsalSerialLearning("thesis/dRRiris.txt", irisann, inputsIris, outputsIris, 
 		//		basePopSize, serialPopSize, maxError, bufferSize);
 		//sweepPseudoRehearsalSerialLearning("thesis/dSPRiris.txt", randann, 32, 32,
-			//basePopSize, serialPopSize, maxError, bufferSize);
+		//basePopSize, serialPopSize, maxError, bufferSize);
 		//noThenFullThenRandomThenSweepPs("thesis/nothenfullthenrandomthensweepps.txt", randann, basePopSize, serialPopSize, maxError);
-		noThenFullThenSweepThenSweepPs("thesis/nothenfullthensweepthensweepps2.txt", randann, basePopSize, serialPopSize, maxError, true);
+		//noThenFullThenSweepThenSweepPs("thesis/nothenfullthensweepthensweepps2.txt", randann, basePopSize, serialPopSize, maxError, true);
 
-		
+
 		double[][] inputs = {{0,0}, {0,1}, {1,0}, {1,1}};
 		double[][] outputs = {{0}, {1}, {1}, {0}};
 		ANN dynann = new ANN(1, 0.5, 0.5, 2, 1, 1);
@@ -49,7 +49,7 @@ public class SimsThesis {
 		double abortlim = 10000;
 		boolean reset = true;
 		boolean reals = false;
-		
+
 		double[][] basein = {{0,0}, {0,1}};
 		double[][] baseout = {{0}, {1}};
 		double[][] serialin = {{1,0}, {1,1}};
@@ -57,30 +57,289 @@ public class SimsThesis {
 		//dynamicTrain("thesis/dynamictrack.txt", dynann, inputs, outputs, dynamicError, false);
 		// TRY CHANGING BUFFER SIZE
 		//sweepPseudoRehearsalSerialLearningDynVsNot("thesis/dynVsNot.txt", dynann, 
-			//	basein, baseout, serialin, serialout, dynamicError, bufferSize, abortlim, reset, reals);
-		
+		//	basein, baseout, serialin, serialout, dynamicError, bufferSize, abortlim, reset, reals);
+
 		//sweepPseudoRehearsalSerialLearningDynVsNot("thesis/dynVsNotReals.txt", dynann, 
-			//		basein, baseout, serialin, serialout, dynamicError, bufferSize, abortlim, true, true);
-		
+		//		basein, baseout, serialin, serialout, dynamicError, bufferSize, abortlim, true, true);
+
 		/*ANN dynIrisAnn = new ANN(1, 0.5, 0.5, 4, 1, 3);
 		double irisError = 0.1;
-		
+
 		double[][] inputsIrisSmall = ANN.readPattern("src/ann/smallirisin.txt", "\\s\\s");
 		double[][] outputsIrisSmall = ANN.readPattern("src/ann/smallirisout.txt", "\\s\\s");
-		
+
 		double[][] baseinputsIris = Arrays.copyOf(inputsIrisSmall, 20);
 		double[][] baseoutputsIris = Arrays.copyOf(outputsIrisSmall, 20);
 		double[][] serialinputsIris = Arrays.copyOfRange(inputsIrisSmall, 21, 30);
 		double[][] serialoutputsIris = Arrays.copyOfRange(outputsIrisSmall, 21, 30);
-		
+
 		System.out.println(Arrays.deepToString(baseinputsIris));
 		System.out.println(Arrays.deepToString(baseoutputsIris));
 		System.out.println(Arrays.deepToString(serialinputsIris));
 		System.out.println(Arrays.deepToString(serialoutputsIris));
-		
+
 		sweepPseudoRehearsalSerialLearningDynVsNot("thesis/dynVsNot.txt", dynIrisAnn, 
 				baseinputsIris, baseoutputsIris, serialinputsIris, serialoutputsIris, irisError, bufferSize, abortlim, reset, reals);*/
-		
+
+		//findBestInputVectorSizePseudo("thesis/vectorSizes.txt",50,0,0,dynann,null);
+		findBestInputRealRangePseudo("thesis/rangeSizes.txt", 50, 0, 0, dynann, 3);
+	}
+
+	public static void findBestInputRealRangePseudo(String filename, int reps, int epochsPerRep, int printFrequency, 
+			ANN ann, int vectorSize) throws IOException {
+
+		ANN psnn = new ANN(1, 0.5, 0.5, 3, 4, 1);
+
+		File file = new File(filename);
+		FileWriter f = new FileWriter(file.getAbsolutePath());
+
+		double maxError = 0.02;
+		int bufferSize = 4;
+		boolean reals = true;
+
+		double[][] inputsCon = {{0,0,0}, {0,0,1}, {0,1,0}};
+		double[][] outputsCon = {{0}, {1}, {1}};
+		double[][] inputsPs = {{0,1,1}};
+		double[][] outputsPs = {{0}};
+
+		double[] ranges = {0.0, 0.1, 0.03, 0.04, 0.05, 1.0};
+
+		for (int range = 0; range < ranges.length; range++) {
+			f.write("Range " + range + "\t");	
+
+			for (int rep = 0; rep < reps; rep++) {
+				psnn.reset();
+				double min = 0.5 - (ranges[range]/2);
+				double max = 0.5 + (ranges[range]/2);
+				System.err.println("range " + ranges[range] + " min " + min + " max " + max);
+				double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsCon, outputsCon, 
+						inputsPs, outputsPs, maxError, bufferSize, reals, min, max);
+
+				Pattern p = new Pattern(inputsPs[0], outputsPs[0]);
+				psnn.pass(p);
+				for (int i = 0; i < inputsCon.length; i++) {
+					Pattern tria = new Pattern(inputsCon[i], null);
+					psnn.pass(tria);
+					//System.out.println(Arrays.toString(inputsConTwo[i]) +
+					//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				}
+				for (int i = 0; i < inputsPs.length; i++) {
+					Pattern tria = new Pattern(inputsPs[i], null);
+					psnn.pass(tria);
+					//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+					//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+					double[] out = psnn.getCurrentOutput();
+					f.write("\t" + out[0]);
+				}
+			}
+			f.write("\n");
+		}
+		f.close();
+	}
+
+	public static void findBestInputVectorSizePseudo(String filename, int reps, int epochsPerRep, int printFrequency,
+			ANN ann, int[] vectorSizes) throws IOException {
+		// metric is by retention after 1000 reps
+
+		ANN psnn = new ANN(1, 0.5, 0.5, 2, 4, 1);
+
+		File file = new File(filename);
+		FileWriter f = new FileWriter(file.getAbsolutePath());
+
+		double[][] inputsConTwo = {{0,0}, {0,1}, {1,0}};
+		double[][] outputsConTwo = {{0}, {1}, {1}};
+		double[][] inputsPsTwo = {{1,1}};
+		double[][] outputsPsTwo = {{0}};
+
+		double[][] inputsConThree = {{0,0,0}, {0,0,1}, {0,1,0}};
+		double[][] outputsConThree = {{0}, {1}, {1}};
+		double[][] inputsPsThree = {{0,1,1}};
+		double[][] outputsPsThree = {{0}};
+
+		double[][] inputsConFour = {{0,0,0,0}, {0,0,0,1}, {0,0,1,0}};
+		double[][] outputsConFour = {{0}, {1}, {1}};
+		double[][] inputsPsFour = {{0,0,1,1}};
+		double[][] outputsPsFour = {{0}};
+
+		double[][] inputsConFive = {{0,0,0,0,0}, {0,0,0,0,1}, {0,0,0,1,0}};
+		double[][] outputsConFive = {{0}, {1}, {1}};
+		double[][] inputsPsFive = {{0,0,0,1,1}};
+		double[][] outputsPsFive = {{0}};
+
+		double maxError = 0.02;
+		int bufferSize = 4;
+		boolean reals = false;
+		//double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConTwo, outputsConTwo, 
+		//	inputsPsTwo, outputsPsTwo, maxError, bufferSize, reals);
+
+		/*for (int i = 0; i < trial.length; i++) {
+			f.write(i + "\t" + trial[i] + "\n");
+		}
+
+		f.close();*/
+		f.write("1");
+
+		for (int rep = 0; rep < reps; rep++) {
+			psnn.reset();
+			double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConTwo, outputsConTwo, 
+					inputsPsTwo, outputsPsTwo, maxError, bufferSize, reals, 0 , 1);
+
+			Pattern p = new Pattern(inputsPsTwo[0], outputsPsTwo[0]);
+			psnn.pass(p);
+			for (int i = 0; i < inputsConTwo.length; i++) {
+				Pattern tria = new Pattern(inputsConTwo[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsConTwo[i]) +
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+			}
+			for (int i = 0; i < inputsPsTwo.length; i++) {
+				Pattern tria = new Pattern(inputsPsTwo[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				double[] out = psnn.getCurrentOutput();
+				f.write("\t" + out[0]);
+			}
+		}
+
+		f.write("\n3");
+		psnn = new ANN(1, psnn.learningSpeed, psnn.momentum, 3, 4, 1);
+
+		for (int rep = 0; rep < reps; rep++) {
+			psnn.reset();
+			double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConThree, outputsConThree, 
+					inputsPsThree, outputsPsThree, maxError, bufferSize, reals, 0 , 1);
+
+			Pattern p = new Pattern(inputsPsThree[0], outputsPsThree[0]);
+			psnn.pass(p);
+			for (int i = 0; i < inputsConThree.length; i++) {
+				Pattern tria = new Pattern(inputsConThree[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsConTwo[i]) +
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+			}
+			for (int i = 0; i < inputsPsThree.length; i++) {
+				Pattern tria = new Pattern(inputsPsThree[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				double[] out = psnn.getCurrentOutput();
+				f.write("\t" + out[0]);
+			}
+		}
+
+		f.write("\n4");
+		psnn = new ANN(1, psnn.learningSpeed, psnn.momentum, 4, 4, 1);
+
+		for (int rep = 0; rep < reps; rep++) {
+			psnn.reset();
+			double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConFour, outputsConFour, 
+					inputsPsFour, outputsPsFour, maxError, bufferSize, reals, 0 , 1);
+
+			Pattern p = new Pattern(inputsPsFour[0], outputsPsFour[0]);
+			psnn.pass(p);
+			for (int i = 0; i < inputsConThree.length; i++) {
+				Pattern tria = new Pattern(inputsConFour[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsConTwo[i]) +
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+			}
+			for (int i = 0; i < inputsPsFour.length; i++) {
+				Pattern tria = new Pattern(inputsPsFour[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				double[] out = psnn.getCurrentOutput();
+				f.write("\t" + out[0]);
+			}
+		}
+
+		f.write("\n5");
+
+		psnn = new ANN(1, psnn.learningSpeed, psnn.momentum, 5, 4, 1);
+		for (int rep = 0; rep < reps; rep++) {
+			psnn.reset();
+			double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConFive, outputsConFive, 
+					inputsPsFive, outputsPsFive, maxError, bufferSize, reals, 0 , 1);
+
+			Pattern p = new Pattern(inputsPsFive[0], outputsPsFive[0]);
+			psnn.pass(p);
+			for (int i = 0; i < inputsConFive.length; i++) {
+				Pattern tria = new Pattern(inputsConFive[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsConTwo[i]) +
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+			}
+			for (int i = 0; i < inputsPsFive.length; i++) {
+				Pattern tria = new Pattern(inputsPsFive[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				double[] out = psnn.getCurrentOutput();
+				f.write("\t" + out[0]);
+			}
+		}
+
+		reals = true;
+
+		f.write("\n1");
+
+		psnn = new ANN(1, psnn.learningSpeed, psnn.momentum, 2, 4, 1);
+
+		for (int rep = 0; rep < reps; rep++) {
+			psnn.reset();
+			double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConTwo, outputsConTwo, 
+					inputsPsTwo, outputsPsTwo, maxError, bufferSize, reals, 0 , 1);
+
+			Pattern p = new Pattern(inputsPsTwo[0], outputsPsTwo[0]);
+			psnn.pass(p);
+			for (int i = 0; i < inputsConTwo.length; i++) {
+				Pattern tria = new Pattern(inputsConTwo[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsConTwo[i]) +
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+			}
+			for (int i = 0; i < inputsPsTwo.length; i++) {
+				Pattern tria = new Pattern(inputsPsTwo[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				double[] out = psnn.getCurrentOutput();
+				f.write("\t" + out[0]);
+			}
+		}
+
+		f.write("\n5");
+
+		psnn = new ANN(1, psnn.learningSpeed, psnn.momentum, 5, 4, 1);
+		for (int rep = 0; rep < reps; rep++) {
+			psnn.reset();
+			double[] trial = psnn.sweepPseudoRehearsalSerialLearning(inputsConFive, outputsConFive, 
+					inputsPsFive, outputsPsFive, maxError, bufferSize, reals, 0 , 1);
+
+			Pattern p = new Pattern(inputsPsFive[0], outputsPsFive[0]);
+			psnn.pass(p);
+			for (int i = 0; i < inputsConFive.length; i++) {
+				Pattern tria = new Pattern(inputsConFive[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsConTwo[i]) +
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+			}
+			for (int i = 0; i < inputsPsFive.length; i++) {
+				Pattern tria = new Pattern(inputsPsFive[i], null);
+				psnn.pass(tria);
+				//System.out.println(Arrays.toString(inputsPsTwo[i]) + 
+				//	" -> " + Arrays.toString(psnn.getCurrentOutput()));
+				double[] out = psnn.getCurrentOutput();
+				f.write("\t" + out[0]);
+			}
+		}
+
+		f.close();
+		// for each vector size
+		// learn three of the things concurrently
+		// try to pseudorehearse a fourth for 1000 reps
+		// output learnedness of the new thing
 	}
 
 	public static void findBestOverfittingByHL(String filename, int reps, int epochsPerRep, int printFrequency,
@@ -110,7 +369,7 @@ public class SimsThesis {
 			double[][] tracks = new double[numDataPoints][reps];
 			for (int q = 0; q < reps; q++) {
 				ann.reset();
-				
+
 				ANN.randomTrainPopulation(inputs, trainin, testin, outputs, trainout, testout);
 
 				int dataPoint = 0;
@@ -137,7 +396,7 @@ public class SimsThesis {
 		}
 		f.close();
 	}
-	
+
 	public static void findBestHL(String filename, int reps, int epochsPerRep, int printFrequency,
 			ANN ann, int[] hlsizes, double[][] inputs, double[][] outputs) throws IOException {
 		int numDataPoints = epochsPerRep/printFrequency;
@@ -165,7 +424,7 @@ public class SimsThesis {
 			double[][] tracks = new double[numDataPoints][reps];
 			for (int q = 0; q < reps; q++) {
 				ann.reset();
-				
+
 				int dataPoint = 0;
 				for (int i = 0; i < epochsPerRep; i++) {
 					ANN.permute(inputs, outputs);
@@ -190,7 +449,7 @@ public class SimsThesis {
 		}
 		f.close();
 	}
-	
+
 	public static void trackError(String filename, int reps, int epochsPerRep, int printFrequency,
 			ANN ann, double[][] inputs, double[][] outputs) throws IOException {
 		File file = new File(filename); //new File("omg_ann_or.txt");
@@ -224,29 +483,29 @@ public class SimsThesis {
 		}
 		f.close();
 	}
-		
+
 	public static void createRandomDataSet(double[][] inputs, double[][] outputs) {
 		Random r = new Random();
-		
+
 		for (int i = 0; i < inputs.length; i++) {
 			for (int j = 0; j < inputs[0].length; j++) {
 				inputs[i][j] = r.nextDouble() < 0.5 ? 0 : 1;
 			}
 		}
-		
+
 		for (int i = 0; i < outputs.length; i++) {
 			for (int j = 0; j < outputs[0].length; j++) {
 				outputs[i][j] = r.nextDouble() < 0.5 ? 0 : 1;
 			}
 		}
 	}
-	
+
 	public static void sweepPseudoRehearsalSerialLearning(String filename, ANN ann, int inputLength, int outputLength,
 			int basePopSize, int serialPopSize, double maxError, int bufferSize, boolean reals) throws IOException {
 		double[][] inputs = new double[basePopSize+serialPopSize][inputLength];
 		double[][] outputs = new double[basePopSize+serialPopSize][outputLength];
 		createRandomDataSet(inputs, outputs);
-		
+
 		double[][] basein = new double[basePopSize][inputs[0].length];
 		double[][] baseout = new double[basePopSize][outputs[0].length];
 		double[][] serialin = new double[serialPopSize][inputs[0].length];
@@ -269,8 +528,8 @@ public class SimsThesis {
 			serialout = new double[serialPopSize][outputs[0].length];
 
 			ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout); // %%%%REALS
-			
-			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize, reals);
+
+			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize, reals, 0 , 1);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
 			}
@@ -286,7 +545,7 @@ public class SimsThesis {
 		System.out.println("done");
 
 	}
-	
+
 	public static void sweepPseudoRehearsalSerialLearningDynVsNot(String filename, ANN ann, 
 			double[][] basein, double[][] baseout,
 			double[][] serialin, double[][] serialout, 
@@ -295,21 +554,21 @@ public class SimsThesis {
 
 		File file = new File(filename);
 		FileWriter f = new FileWriter(file.getAbsolutePath());
-		
+
 		/*f.write("0\t");
 		for (int i = 0; i < serialout.length + 1; i++) {
 			f.write(i + "\t");
 		}
 		f.write("\n");*/
-		
+
 		int reps = 1; // number of tests
 		double[][] allout = new double[serialin.length+1][reps]; // holds all test data
-		
+
 		for (int rep = 0; rep < reps; rep++) {
 			//System.out.println("one: trial " + rep);
 			ann.reset();
-			
-			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize, reals);
+
+			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, bufferSize, reals, 0 , 1);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
 			}
@@ -322,8 +581,8 @@ public class SimsThesis {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");*/
-		
-		
+
+
 		//// dynamic! MUST GO AFTER BECAUSE RESET DOESN'T RESENT # OF HL NODES!!!!!!!
 		System.out.println("\n\nDYNAMICCCCC");
 		double[][][] dynamOut = new double[2][serialin.length+1][reps]; 
@@ -331,9 +590,9 @@ public class SimsThesis {
 		for (int rep = 0; rep < reps; rep++) {
 			//System.out.println("one: trial " + rep);
 			ann.reset();
-			
+
 			double[][] trial = ann.dynamicSweepPseudo(basein, baseout, serialin, serialout, maxError, bufferSize, abortlim, reset, reals);
-			
+
 			System.out.println("trials:");
 			System.out.println(Arrays.deepToString(trial) + "\n");
 			for (int j = 0; j < dynamOut.length; j++) {
@@ -357,7 +616,7 @@ public class SimsThesis {
 			f.write(SimsA01.median(dynamOut[1][i]) + "\t");
 		}
 		f.write("\n");
-		
+
 		f.close();
 		System.out.println("done");
 
@@ -397,21 +656,21 @@ public class SimsThesis {
 
 	public static void noThenFullThenSweepThenSweepPs(String filename, ANN ann, 
 			int basePopSize, int serialPopSize, double maxError, boolean reals) throws IOException {
-		
+
 		int inputSize = ann.layerSize(0);
 		int outputSize = ann.layerSize(ann.numLayers()-1);
-		
+
 		double[][] inputs = new double[basePopSize+serialPopSize][inputSize];
 		double[][] outputs = new double[basePopSize+serialPopSize][outputSize];
-		
+
 		double[][] basein = new double[basePopSize][inputSize];
 		double[][] baseout = new double[basePopSize][outputSize];
 		double[][] serialin = new double[serialPopSize][inputSize];
 		double[][] serialout = new double[serialPopSize][outputSize];
-		
+
 		File file = new File(filename);
 		FileWriter f = new FileWriter(file.getAbsolutePath());
-		
+
 		f.write("0\t");
 		for (int i = 0; i < serialout.length + 1; i++) {
 			f.write(i + "\t");
@@ -419,12 +678,12 @@ public class SimsThesis {
 		f.write("\n");
 
 		int reps = 50;
-		
+
 		double[][] allout = new double[serialin.length+1][reps];
-		
+
 		/*// no rehearsal /////////////////////
 		System.out.println("no rehearsal...");
-		
+
 		for (int rep = 0; rep < reps; rep++) {
 			System.out.println("rep " + rep);
 			createRandomData(inputs, outputs);
@@ -442,10 +701,10 @@ public class SimsThesis {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
-		
+
 		// full rehearsal /////////////////
 		System.out.println("full rehearsal...");
-		
+
 		allout = new double[serialin.length+1][reps];
 		for (int rep = 0; rep < reps; rep++) {
 			System.out.println("rep " + rep);
@@ -464,7 +723,7 @@ public class SimsThesis {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
-		
+
 		// sweep //////////////////////
 		System.out.println("aaaaaaand random....");
 		allout = new double[serialin.length+1][reps];
@@ -486,10 +745,10 @@ public class SimsThesis {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
-		
-		*/// sweep pseudo
+
+		 */// sweep pseudo
 		System.out.println("aaaaaaaaaaaaaaand sweep pseudorehearsal...!");
-		
+
 		allout = new double[serialin.length+1][reps]; 
 
 		for (int rep = 0; rep < reps; rep++) {
@@ -503,8 +762,8 @@ public class SimsThesis {
 			serialout = new double[serialPopSize][outputs[0].length];
 
 			ANN.randomTrainPopulation(inputs, basein, serialin, outputs, baseout, serialout); // %%%%REALS
-			
-			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, 10, reals);
+
+			double[] trial = ann.sweepPseudoRehearsalSerialLearning(basein, baseout, serialin, serialout, maxError, 10, reals, 0 , 1);
 			for (int j = 0; j < allout.length; j++) {
 				allout[j][rep] = trial[j];
 			}
@@ -515,11 +774,11 @@ public class SimsThesis {
 			f.write(SimsA01.median(allout[i]) + "\t");
 		}
 		f.write("\n");
-		
+
 		f.close();
-		
+
 	}
-	
+
 	public static void fullRehearsalSerialLearning(String filename, ANN ann,  double[][] inputs, double[][] outputs,
 			int basePopSize, int serialPopSize, double maxError) throws IOException {
 
@@ -581,7 +840,7 @@ public class SimsThesis {
 		f.close();
 
 	}
-	
+
 	public static void noRehearsalSerialLearning(String filename, ANN ann,  double[][] inputs, double[][] outputs,
 			int basePopSize, int serialPopSize, double maxError) throws IOException {
 
@@ -634,10 +893,10 @@ public class SimsThesis {
 
 	public static void dynamicTrain(String filename, ANN ann, double[][] inputs, double[][] outputs, double maxerror, boolean reset) throws IOException {
 		double[] errs = ann.dynamicTrain(inputs, outputs, maxerror, reset);
-		
+
 		File file = new File(filename);
 		FileWriter f = new FileWriter(file.getAbsolutePath());
-		
+
 		for (int i = 0; i < errs.length; i++) {
 			f.write((i*100) + "\t");
 		}
@@ -646,13 +905,13 @@ public class SimsThesis {
 			f.write(errs[i] + "\t");
 		}
 		f.write("\n");
-		
+
 		f.close();
-		
+
 	}
-	
+
 	public static void dynamicSweepPseudo(ANN ann, double[][] baseinputs, double[][] baseoutputs, 
 			double[][] serialinputs, double[][] serialoutputs, double maxerror) {
-		
+
 	}
 }

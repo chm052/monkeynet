@@ -215,7 +215,9 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
-		if (counter>=1000) { System.err.println("counter exceeded 1000"); }
+		if (counter>=1000) { System.err.println("counter exceeded 1000"); }  else {
+			System.out.println("Learned within " + counter + " epochs.");
+		}
 
 // ^^^^ You are here. What's with the js?
 		for (int i = 0; i < serialinputs.length; i++) {
@@ -244,7 +246,9 @@ public class ANN {
 				}
 				error = populationError(outputs(rehearseinputs), rehearseoutputs);
 			}
-			if (counter>=1000) { System.err.println("counter exceeded 1000"); }
+			if (counter>=1000) { System.err.println("counter exceeded 1000"); } else {
+				System.out.println("Learned within " + counter + " epochs.");
+			}
 
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
@@ -301,13 +305,13 @@ public class ANN {
 		return outputs;
 	}
 	
-	public void makepseudopop(double[][] inputs, double[][] outputs, boolean reals) {
+	public void makepseudopop(double[][] inputs, double[][] outputs, boolean reals, double minrange, double maxrange) {
 		Random r = new Random();
 		
 		for (int i = 0; i < inputs.length; i++) {
 			for (int j = 0; j < inputs[i].length; j++) {
 				if (reals) {
-					inputs[i][j] = r.nextDouble();
+					inputs[i][j] = r.nextDouble() * (maxrange - minrange) + minrange;
 				} else {
 					inputs[i][j] = r.nextDouble() < 0.5 ? 0 : 1;
 				}
@@ -320,7 +324,7 @@ public class ANN {
 	}
 	
 	public double[] sweepPseudoRehearsalSerialLearning(double[][] baseinputs, double[][] baseoutputs, 
-			double[][] serialinputs, double[][] serialoutputs, double maxerror, int bufferSize, boolean reals) {
+			double[][] serialinputs, double[][] serialoutputs, double maxerror, int bufferSize, boolean reals, double minrange, double maxrange) {
 		double[] outputs = new double[serialinputs.length + 1];	
 		//System.out.println("Entering sweep pseudorehearsal");
 		double error = maxerror + 1;
@@ -337,11 +341,20 @@ public class ANN {
 		}
 		outputs[0] = error;
 		//System.out.println("Trained on base pop");
+		if (cutoff>=1000) { System.err.println("counter exceeded 1000"); }  else {
+			//System.out.println("Learned within " + cutoff + " epochs.");
+		}
 		
 		double[][] pseudoinputs = new double[10][baseinputs[0].length];
 		double[][] pseudooutputs = new double[10][baseoutputs[0].length];
 		
-		makepseudopop(pseudoinputs, pseudooutputs, reals);
+		makepseudopop(pseudoinputs, pseudooutputs, reals, minrange, maxrange);
+		
+		/*System.out.println("PSEUDOPOP INPUTS");
+		for (int i = 0; i < pseudoinputs.length; i++) {
+			System.out.println(Arrays.toString(pseudoinputs[i]));
+		}
+		System.out.println();*/
 		//System.out.println("\tONE: made pseudopop:\n" + Arrays.deepToString(pseudoinputs) + "\n" + Arrays.deepToString(pseudooutputs));
 
 		for (int i = 0; i < serialinputs.length; i++) {
@@ -372,10 +385,13 @@ public class ANN {
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
 		}
-		System.out.println("DONE: error " + populationError(outputs(baseinputs), baseoutputs));
-		System.out.println("DONE: error " + populationError(outputs(serialinputs), serialoutputs));
+		if (cutoff>=1000) { System.err.println("counter exceeded 1000"); }  else {
+			//System.out.println("Learned within " + cutoff + " epochs.");
+		}
+		//System.out.println("DONE: error " + populationError(outputs(baseinputs), baseoutputs));
+		//System.out.println("DONE: error " + populationError(outputs(serialinputs), serialoutputs));
 
-		System.out.println("\n"+this+"\n");
+		//System.out.println("\n"+this+"\n");
 		return outputs;
 	}
 
@@ -498,7 +514,7 @@ public class ANN {
 		double[][] pseudoinputs = new double[8][baseinputs[0].length]; // FIX LITERAL
 		double[][] pseudooutputs = new double[8][baseoutputs[0].length];
 		
-		makepseudopop(pseudoinputs, pseudooutputs, reals);
+		makepseudopop(pseudoinputs, pseudooutputs, reals, 0, 1);
 		System.out.println("\tONE: made pseudopop:\n" + Arrays.deepToString(pseudoinputs) + "\n" + Arrays.deepToString(pseudooutputs));
 
 		for (int i = 0; i < serialinputs.length; i++) {
@@ -518,7 +534,7 @@ public class ANN {
 		//		error = populationError(outputs(rehearseinputs), rehearseoutputs);
 				//System.out.println("THREE: error " + error);
 		//	}
-			makepseudopop(pseudoinputs, pseudooutputs, reals);
+			makepseudopop(pseudoinputs, pseudooutputs, reals, 0, 1);
 
 			double[][] errs = dynamicPseudoTrain(pseudoinputs, pseudooutputs, serialinputs[i], serialoutputs[i], baseinputs, baseoutputs, maxerror, bufferSize, abortlim, reset);
 			
