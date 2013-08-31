@@ -14,6 +14,7 @@ public class ANN {
 	private final Layer[] layers;
 	public double learningSpeed;
 	public double momentum;
+	int quitCounter = 10000;
 
 	public ANN(int numHiddenLayers, double learningSpeed, double momentum,
 			int... sizeLayers) {
@@ -114,7 +115,7 @@ public class ANN {
 		double error = maxerror + 1;
 		int counter = 0;	
 		// train base population
-		while (maxerror < error && counter++ < 1000) {
+		while (maxerror < error && counter++ < quitCounter) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -123,14 +124,14 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
-		if (counter>=1000) { System.err.println("counter exceeded 1000");}
+		if (counter>=quitCounter) { System.err.println("counter exceeded quitCounter");}
 
 		for (int i = 0; i < serialinputs.length; i++) {
 			Pattern trial = new Pattern(serialinputs[i], serialoutputs[i]);
 
 			error = maxerror + 1;
 			counter = 0;
-			while (maxerror < error && counter++ < 1000) {
+			while (maxerror < error && counter++ < quitCounter) {
 				pass(trial);
 				updateAllWeights(trial);
 				error = patternError(getCurrentOutput(), serialoutputs[i]);
@@ -141,7 +142,7 @@ public class ANN {
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
 		}
-		if (counter>=1000) { System.err.println("counter exceeded 1000"); }
+		if (counter>=quitCounter) { System.err.println("counter exceeded quitCounter"); }
 		
 		return outputs;
 	}
@@ -154,7 +155,7 @@ public class ANN {
 		double error = maxerror + 1;
 		int counter = 0;
 		// train base population
-		while (maxerror < error && counter++ < 1000) {
+		while (maxerror < error && counter++ < quitCounter) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -163,7 +164,7 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
-		if (counter>=1000) { System.err.println("counter exceeded 1000"); }
+		if (counter>=quitCounter) { System.err.println("counter exceeded quitCounter"); }
 
 
 		for (int i = 0; i < serialinputs.length; i++) {
@@ -181,7 +182,7 @@ public class ANN {
 
 			error = maxerror + 1;
 			counter = 0;
-			while (maxerror < error && counter++ < 1000) {
+ 			while (maxerror < error && counter++ < quitCounter) {
 				for (int j = 0; j < rehearseinputs.length; j++) {
 					Pattern trial = new Pattern(rehearseinputs[j], rehearseoutputs[j]);
 					pass(trial);
@@ -189,7 +190,7 @@ public class ANN {
 				}
 				error = populationError(outputs(rehearseinputs), rehearseoutputs);
 			}
-			if (counter>=1000) { System.err.println("counter exceeded 1000"); }
+			if (counter>=quitCounter) { System.err.println("counter exceeded quitCounter"); }
 
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
@@ -206,7 +207,7 @@ public class ANN {
 		double error = maxerror + 1;
 		int counter = 0;
 		// train base population
-		while (maxerror < error && counter++ < 1000) {
+		while (maxerror < error && counter++ < quitCounter) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -215,7 +216,7 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
-		if (counter>=1000) { System.err.println("counter exceeded 1000"); }  else {
+		if (counter>=quitCounter) { System.err.println("counter exceeded quitCounter"); }  else {
 			System.out.println("Learned within " + counter + " epochs.");
 		}
 
@@ -235,7 +236,7 @@ public class ANN {
 
 			error = maxerror + 1;
 			counter = 0;
-			while (maxerror < error && counter++ < 10000) {
+			while (maxerror < error && counter++ < quitCounter) {
 				
 				selectpop(rehearseinputs, rehearseoutputs, baseinputs.length, baseinputs, baseoutputs);
 				
@@ -246,7 +247,7 @@ public class ANN {
 				}
 				error = populationError(outputs(rehearseinputs), rehearseoutputs);
 			}
-			if (counter>=1000) { System.err.println("counter exceeded 1000"); } else {
+			if (counter>=quitCounter) { System.err.println("counter exceeded quitCounter"); } else {
 				System.out.println("Learned within " + counter + " epochs.");
 			}
 
@@ -265,7 +266,7 @@ public class ANN {
 		double error = maxerror + 1;
 		int counter = 0;
 		// train base population
-		while (maxerror < error && counter++ < 1000) {
+		while (maxerror < error && counter++ < quitCounter) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -289,7 +290,7 @@ public class ANN {
 
 			error = maxerror + 1;
 			counter = 0;
-			while (maxerror < error && counter++ < 1000) {
+			while (maxerror < error && counter++ < quitCounter) {
 				for (int j = 0; j < rehearseinputs.length; j++) {
 					Pattern trial = new Pattern(rehearseinputs[j], rehearseoutputs[j]);
 					pass(trial);
@@ -324,14 +325,13 @@ public class ANN {
 	}
 	
 	public double[] sweepPseudoRehearsalSerialLearning(double[][] baseinputs, double[][] baseoutputs, 
-			double[][] serialinputs, double[][] serialoutputs, double maxerror, int bufferSize, boolean reals, double minrange, double maxrange) {
+			double[][] serialinputs, double[][] serialoutputs, double maxerror, int popSize, int bufferSize, boolean reals, double minrange, double maxrange) {
 		double[] outputs = new double[serialinputs.length + 1];	
-		//System.out.println("Entering sweep pseudorehearsal");
 		double error = maxerror + 1;
 		
 		// train base population
 		int cutoff = 0;
-		while (maxerror < error && cutoff++ < 100000) {
+		while (maxerror < error && cutoff++ < quitCounter) {
 			for (int i = 0; i < baseinputs.length; i++) {
 				Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 				pass(trial);
@@ -340,25 +340,16 @@ public class ANN {
 			error = populationError(outputs(baseinputs), baseoutputs);
 		}
 		outputs[0] = error;
-		//System.out.println("Trained on base pop");
-		if (cutoff>=1000) { System.err.println("counter exceeded 1000"); }  else {
+		if (cutoff>=quitCounter) { System.err.println("counter exceeded quitCounter"); }  else {
 			//System.out.println("Learned within " + cutoff + " epochs.");
 		}
 		
-		double[][] pseudoinputs = new double[10][baseinputs[0].length];
-		double[][] pseudooutputs = new double[10][baseoutputs[0].length];
+		double[][] pseudoinputs = new double[popSize][baseinputs[0].length];
+		double[][] pseudooutputs = new double[popSize][baseoutputs[0].length];
 		
 		makepseudopop(pseudoinputs, pseudooutputs, reals, minrange, maxrange);
 		
-		/*System.out.println("PSEUDOPOP INPUTS");
-		for (int i = 0; i < pseudoinputs.length; i++) {
-			System.out.println(Arrays.toString(pseudoinputs[i]));
-		}
-		System.out.println();*/
-		//System.out.println("\tONE: made pseudopop:\n" + Arrays.deepToString(pseudoinputs) + "\n" + Arrays.deepToString(pseudooutputs));
-
 		for (int i = 0; i < serialinputs.length; i++) {
-			//System.out.println("\tTWO: training serial input " + i);
 			double[][] rehearseinputs = new double[bufferSize + 1][serialinputs[i].length];
 			double[][] rehearseoutputs = new double[bufferSize + 1][serialoutputs[i].length];
 			rehearseinputs[rehearseinputs.length-1] = serialinputs[i];
@@ -366,8 +357,8 @@ public class ANN {
 
 			error = maxerror + 1;
 			cutoff = 0;
-			maxerror *= 1.5;
-			while (maxerror < error && cutoff++ < 100000) {
+			//maxerror *= 1.5; WTF
+			while (maxerror < error && cutoff++ < quitCounter) {
 				
 				selectpop(rehearseinputs, rehearseoutputs, rehearseinputs.length-1, pseudoinputs, pseudooutputs);
 				
@@ -376,22 +367,16 @@ public class ANN {
 					pass(trial);
 					updateAllWeights(trial);
 				}
-				//pass(rehearseinputs[rehearseinputs.length-1]); // CHECK!
 				error = patternError(getCurrentOutput(), 
 						rehearseoutputs[rehearseoutputs.length-1]); //CHANGED!!! CHANGED!!!!
-				//System.out.println("THREE: error " + error);
 			}
-			//System.out.println("\tTHREE: trained "  + i);
 			double poperror = populationError(outputs(baseinputs), baseoutputs);
 			outputs[i+1] = poperror;
 		}
-		if (cutoff>=1000) { System.err.println("counter exceeded 1000"); }  else {
+		if (cutoff>=quitCounter) { System.err.println("counter exceeded quitCounter"); }  else {
 			//System.out.println("Learned within " + cutoff + " epochs.");
 		}
-		//System.out.println("DONE: error " + populationError(outputs(baseinputs), baseoutputs));
-		//System.out.println("DONE: error " + populationError(outputs(serialinputs), serialoutputs));
 
-		//System.out.println("\n"+this+"\n");
 		return outputs;
 	}
 
@@ -496,7 +481,7 @@ public class ANN {
 		System.out.println("Entering sweep pseudorehearsal");
 		
 		// train base population
-		//while (maxerror < error && cutoff++ < 1000) {
+		//while (maxerror < error && cutoff++ < quitCounter) {
 		//	for (int i = 0; i < baseinputs.length; i++) {
 		//		Pattern trial = new Pattern(baseinputs[i], baseoutputs[i]);
 		//		pass(trial);
@@ -522,7 +507,7 @@ public class ANN {
 
 			//error = maxerror + 1;
 			//cutoff = 0;
-		//	while (maxerror < error && cutoff++ < 1000) {
+		//	while (maxerror < error && cutoff++ < quitCounter) {
 				
 		//		selectpop(rehearseinputs, rehearseoutputs, rehearseinputs.length-1, pseudoinputs, pseudooutputs);
 				
@@ -644,7 +629,7 @@ public class ANN {
 		while (maxerror < error) {
 			counter++;
 			if (counter%100==0) errs.add(error);//System.out.println("Trial " + counter + ": " + error);
-			if (counter >= 1000) { // MAGIC NUM IS 425 FOR LEARNING XOR WITH ONE HL NODE
+			if (counter >= quitCounter) { // MAGIC NUM IS 425 FOR LEARNING XOR WITH ONE HL NODE
 				counter = 0;
 				addHiddenUnit(reset);
 				System.out.println("\nADDED UNIT\n----------\n" + this);
